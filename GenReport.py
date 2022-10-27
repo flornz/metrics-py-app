@@ -5,11 +5,16 @@ import numpy as np
 import math
 
 # Sheetname to read from and the Out Of Date (Sundays of the week)
-sheetName = "SEP 12 - SEP 16"
-outOfDate = "09/11/2022"
+inputFileName = "GFD - Master Weekly Metrics _ F2022.xlsx"
+outputFileName = "Donor Count Summary.xlsx"
+sheetName = "AUG 29 - SEP 2"
+outOfDate = "09/04/2022"
+# dates that will be appended to existing reort (outputFileName)
+dates = ["08/29/2022", "08/30/2022", "08/31/2022", "09/01/2022", "09/02/2022", "09/03/2022"]
 
 # Read from the Excel File (declaration of the Excel File Object)
-xlsx = pd.ExcelFile("GFD - Master Weekly Metrics _ F2022.xlsx")
+xlsx = pd.ExcelFile(inputFileName)
+xlsx2 = pd.ExcelFile(outputFileName)
 
 # getMonthlyAsk (sheetName: string, numCharities: int)
 # Reads the column "B" to get all products for each corresponding charity
@@ -135,16 +140,22 @@ def compileDayStats(date):
     # Create a dataframe to append onto the WeeklyData as well
     sundayInsert = pd.DataFrame({"Payment Day":outofdatelist, 'Charity Code':currClients, 'Product':newProds, 'Gross Count':outOfDateGrossCount, 'Net Count':outOfDateNetCount})
     WeeklyData = WeeklyData.append(sundayInsert)
+    # Convert date column to yyyy-mm-dd
+    WeeklyData['Payment Day'] = pd.to_datetime(WeeklyData['Payment Day']).dt.date
+
+    DonorCountSummary = pd.read_excel(xlsx2, index_col=None, na_values=['NA'])
+    # Convert date column to yyyy-mm-dd
+    DonorCountSummary['Payment Day'] = pd.to_datetime(DonorCountSummary['Payment Day']).dt.date
+    DonorCountSummary = DonorCountSummary.append(WeeklyData)
 
     # Write that WeeklyData dataframe object into the excel sheet, and save it.
-    WeeklyData.to_excel('newFile.xlsx', index=False)
-    # WeeklyData.append_df_to_excel('Donor Count Summary.xlsx',sheet_name='Donor Count Summary',index=False)
+    DonorCountSummary.to_excel(outputFileName, index=False)
 
 
 # Main function that calls the compileDayStats function
 def main():
     # Change array of dates in order to generate the right index values
-    compileDayStats(["09/05/2022", "09/06/2022", "09/07/2022", "09/08/2022", "09/09/2022", "09/10/2022"])
+    compileDayStats(dates)
 
 main()
 
